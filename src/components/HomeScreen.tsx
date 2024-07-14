@@ -392,17 +392,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
               <div>
                 <span className="ml-1 text-xs text-gray-500">@{user.username}</span>
                 <div className="text-xs flex items-center text-black">
-                  <small className="ml-1 text-gray-500">{level.name}</small>
-                </div>
-                <div className="text-xs flex items-center text-black">
                   <small className="ml-1 text-gray-500">ID: {user.id}</small>
                 </div>
-                <div className="text-xs flex items-center text-black">
-                  <small className="ml-1 text-gray-500">First Name: {user.firstName}</small>
-                </div>
-                <div className="text-xs flex items-center text-black">
-                  <small className="ml-1 text-gray-500">Last Name: {user.lastName}</small>
-                </div>
+              
                 <div className="text-xs flex items-center text-black">
                   <small className="ml-1 text-gray-500">Language: {user.languageCode}</small>
                 </div>
@@ -506,7 +498,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
                 src="https://storges.xyz/images/storges.png"
                 alt="Coins"
                 width="60%"
-                className="mb-2 mt-2 cursor-pointer"
+                className="mb-4 mt-4 cursor-pointer"
                 style={{ transform }}
                 onClick={handleTapCoin}
                 aria-label="Tap to earn coins"
@@ -522,12 +514,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
                 {cooldown === null ? 'Claim Rewards' : `Next claim in ${formatTime(remainingTime!)}`}
               </button>
               <div className="flex justify-between w-full mt-2">
-                <button
+              <div className="w-full max-w-md p-4 mb-4 flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <div>
+                <p className="text-xs text-gray-500">{fact}</p>
+              </div>
+            </div>
+          </div>
+                {/* <button
                   onClick={() => setShowLeaderboard(true)}
                   className="bg-blue-600 w-full text-white px-2 py-1 rounded-lg hover:bg-blue-700 transition duration-300"
                 >
                   View Leaderboard
-                </button>
+                </button> */}
               </div>
             </div>
           </div>
@@ -545,13 +544,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
               +{click.points}
             </div>
           ))}
-          <div className="w-full max-w-md bg-white rounded-lg p-4 mb-4 shadow-lg flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div>
-                <p className="text-xs text-gray-500">{fact}</p>
-              </div>
-            </div>
-          </div>
+          
           <Modal
             isOpen={showLeaderboard}
             onRequestClose={() => setShowLeaderboard(false)}
