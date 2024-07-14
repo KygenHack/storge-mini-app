@@ -483,7 +483,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
           <div className="w-full max-w-md bg-white rounded-lg p-4 mb-4 shadow-lg text-center">
             <div className="flex flex-col items-center">
               <animated.h1 className="text-3xl font-bold text-gray-800">
-                {animatedScore.number.to((n) => `$${n.toFixed(2)}`)}
+                {animatedScore.number.to((n) => `${n.toFixed(2)}`)} 
               </animated.h1>
               <p className="text-xs text-gray-500 mt-1">Storge Coin Balance</p>
               <div className="w-full bg-gray-300 rounded-full h-3 mt-2 mb-2">
@@ -504,7 +504,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
                 aria-label="Tap to earn coins"
               />
               <small className="text-gray-500">Storges Farming</small>
-              <p className="text-xl text-yellow-500">${claimableAmount.toFixed(2)}</p>
+              <p className="text-xl text-yellow-500">{claimableAmount.toFixed(2)} STG</p>
               <button
                 onClick={handleClaim}
                 className="bg-green-600 text-white w-full px-2 py-1 mt-2 rounded-lg hover:bg-green-700 transition duration-300"
@@ -514,7 +514,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
                 {cooldown === null ? 'Claim Rewards' : `Next claim in ${formatTime(remainingTime!)}`}
               </button>
               <div className="flex justify-between w-full mt-2">
-              <div className="w-full max-w-md p-4 mb-5 flex justify-between items-center">
+              <div className="w-full max-w-md p-4 mb-5 mt-5 flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <div>
                 <p className="text-xs text-gray-500">{fact}</p>
