@@ -514,7 +514,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
                 {cooldown === null ? 'Claim Rewards' : `Next claim in ${formatTime(remainingTime!)}`}
               </button>
               <div className="flex justify-between w-full mt-2">
-              <div className="w-full max-w-md p-4 mb-4 flex justify-between items-center">
+              <div className="w-full max-w-md p-4 mb-5 flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <div>
                 <p className="text-xs text-gray-500">{fact}</p>
