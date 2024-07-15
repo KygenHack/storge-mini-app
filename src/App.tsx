@@ -1,4 +1,3 @@
-// src/App.tsx
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { SDKProvider, useInitData } from '@telegram-apps/sdk-react';
@@ -8,7 +7,6 @@ import CategoriesScreen from './components/CategoriesScreen';
 import Navbar from './components/NavBar';
 import TaskScreen from './components/TaskScreen';
 import ReferralScreen from './components/ReferralScreen';
-import { getAuth } from 'firebase/auth';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { getUserProfile, saveUserProfile } from './firebaseUtils';
 import { auth } from './firebase';
@@ -29,7 +27,7 @@ const App: React.FC<{ balance: number; setBalance: React.Dispatch<React.SetState
           setBalance(profile.balance || 0);
         } else {
           // If no profile, create a new one with initial balance
-          const newProfile = { balance: 67818 }; // Initial balance
+          const newProfile = { balance: 0 }; // Initial balance
           await saveUserProfile(userId, newProfile);
           setUserData(newProfile);
           setBalance(newProfile.balance);
@@ -76,7 +74,7 @@ const App: React.FC<{ balance: number; setBalance: React.Dispatch<React.SetState
 };
 
 const Root: React.FC = () => {
-  const [balance, setBalance] = useState<number>(67818); // Shared state for balance
+  const [balance, setBalance] = useState<number>(0); // Shared state for balance
   const [user] = useAuthState(auth);
 
   const handleTaskComplete = async (reward: number) => {
@@ -96,7 +94,7 @@ const Root: React.FC = () => {
           <Route path="/home" element={<HomeScreen onStart={() => {}} balance={balance} setBalance={setBalance} />} />
           <Route 
             path="/tasks" 
-            element={<TaskScreen onBack={() => window.history.back()} onTaskComplete={handleTaskComplete} balance={balance} setBalance={setBalance} />} 
+            element={<TaskScreen onBack={() => window.history.back()} onTaskComplete={handleTaskComplete} balance={balance} setBalance={setBalance} userId={user ? user.uid : ''} />} 
           />
           <Route path="/frens" element={<ReferralScreen />} />
         </Routes>

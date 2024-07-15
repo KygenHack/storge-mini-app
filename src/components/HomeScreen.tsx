@@ -2,11 +2,11 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useInitData } from '@telegram-apps/sdk-react';
 import { InitData, User } from '../types';
 import { useSpring, animated } from '@react-spring/web';
-import TaskScreen from './TaskScreen'; // Import the TaskScreen component
-import { trophy } from '../images'; // Add the path to your trophy image
-import Modal from 'react-modal'; // Import the modal library
+import TaskScreen from './TaskScreen';
+import Modal from 'react-modal';
+import { getUserProfile, updateUserBalance, getLeaderboard, saveGameProgress } from '../firebaseUtils';
 
-Modal.setAppElement('#root'); // Set the app element for accessibility
+Modal.setAppElement('#root');
 
 interface HomeScreenProps {
   onStart: () => void;
@@ -74,7 +74,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
 
   const user: User | null = telegramInitData && telegramInitData.user
     ? {
-        id: telegramInitData.user.id,
+        id: telegramInitData.user.id.toString(),
         firstName: telegramInitData.user.firstName || '',
         username: telegramInitData.user.username,
         isBot: telegramInitData.user.isBot,
@@ -88,25 +88,25 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
     ? userData.user
     : null;
 
-  const [score, setScore] = useState<number>(INITIAL_SCORE); // Initial balance
-  const [incomeRate, setIncomeRate] = useState<number>(INITIAL_INCOME_RATE); // Income rate per 5 seconds
-  const [claimableAmount, setClaimableAmount] = useState<number>(0); // Amount that can be claimed
-  const [clicks, setClicks] = useState<Click[]>([]); // Clicks for animations
-  const [energy, setEnergy] = useState<number>(INITIAL_ENERGY); // Initial energy
-  const [maxEnergy, setMaxEnergy] = useState<number>(INITIAL_MAX_ENERGY); // Max energy limit
-  const [multiplier, setMultiplier] = useState<number>(1); // Points multiplier
-  const [miningRobotActive, setMiningRobotActive] = useState<boolean>(false); // Mining robot state
-  const [tapBoostActive, setTapBoostActive] = useState<boolean>(false); // Tap boost state
-  const [chargerActive, setChargerActive] = useState<boolean>(false); // Charger state
-  const [cooldown, setCooldown] = useState<number | null>(null); // Cooldown time in seconds
+  const [score, setScore] = useState<number>(INITIAL_SCORE);
+  const [incomeRate, setIncomeRate] = useState<number>(INITIAL_INCOME_RATE);
+  const [claimableAmount, setClaimableAmount] = useState<number>(0);
+  const [clicks, setClicks] = useState<Click[]>([]);
+  const [energy, setEnergy] = useState<number>(INITIAL_ENERGY);
+  const [maxEnergy, setMaxEnergy] = useState<number>(INITIAL_MAX_ENERGY);
+  const [multiplier, setMultiplier] = useState<number>(1);
+  const [miningRobotActive, setMiningRobotActive] = useState<boolean>(false);
+  const [tapBoostActive, setTapBoostActive] = useState<boolean>(false);
+  const [chargerActive, setChargerActive] = useState<boolean>(false);
+  const [cooldown, setCooldown] = useState<number | null>(null);
   const [remainingTime, setRemainingTime] = useState<number | null>(null);
-  const [showShop, setShowShop] = useState<boolean>(false); // Show shop state
-  const [quote, setQuote] = useState<string>(''); // Web3 quote
-  const [fact, setFact] = useState<string>(''); // Storge Coin fact
-  const [showTasks, setShowTasks] = useState<boolean>(false); // Show tasks page state
-  const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false); // Show leaderboard modal state
+  const [showShop, setShowShop] = useState<boolean>(false);
+  const [quote, setQuote] = useState<string>('');
+  const [fact, setFact] = useState<string>('');
+  const [showTasks, setShowTasks] = useState<boolean>(false);
+  const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
 
-  // Boost levels
   const [multiplierLevel, setMultiplierLevel] = useState<number>(1);
   const [miningRobotLevel, setMiningRobotLevel] = useState<number>(1);
   const [tapBoostLevel, setTapBoostLevel] = useState<number>(1);
@@ -142,7 +142,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
   useEffect(() => {
     const incomeInterval = setInterval(() => {
       setClaimableAmount((prevAmount) => prevAmount + incomeRate);
-    }, 5000); // Increment every 5 seconds
+    }, 5000);
 
     return () => clearInterval(incomeInterval);
   }, [incomeRate]);
@@ -150,32 +150,31 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
   useEffect(() => {
     const interval = setInterval(() => {
       setEnergy((prevEnergy) => Math.min(prevEnergy + (chargerActive ? 2 : 1), maxEnergy));
-    }, 100); // Restore energy every second (2 if charger is active)
+    }, 100);
 
-    return () => clearInterval(interval); // Clear interval on component unmount
+    return () => clearInterval(interval);
   }, [chargerActive, maxEnergy]);
 
   useEffect(() => {
     if (miningRobotActive) {
       const miningInterval = setInterval(() => {
-        setScore((prevScore) => prevScore + 10); // Increase score by 10 every 5 seconds
+        setScore((prevScore) => prevScore + 10);
       }, 5000);
 
-      return () => clearInterval(miningInterval); // Clear interval on component unmount
+      return () => clearInterval(miningInterval);
     }
   }, [miningRobotActive]);
 
   useEffect(() => {
     if (tapBoostActive) {
       const tapBoostTimeout = setTimeout(() => {
-        setTapBoostActive(false); // Deactivate tap boost after 30 seconds
+        setTapBoostActive(false);
       }, 30000);
 
-      return () => clearTimeout(tapBoostTimeout); // Clear timeout on component unmount
+      return () => clearTimeout(tapBoostTimeout);
     }
   }, [tapBoostActive]);
 
-  // Web3 Quotes
   const quotes = useMemo(
     () => [
       "The future of finance is decentralized.",
@@ -203,12 +202,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
 
     const quoteInterval = setInterval(() => {
       getDailyQuote();
-    }, 24 * 60 * 60 * 1000); // Update quote daily
+    }, 24 * 60 * 60 * 1000);
 
     return () => clearInterval(quoteInterval);
   }, [quotes]);
 
-  // Storge Coin Facts
   const facts = useMemo(
     () => [
       "You can earn Storge Coin by completing daily tasks.",
@@ -236,31 +234,51 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
 
     const factInterval = setInterval(() => {
       getDailyFact();
-    }, 24 * 60 * 60 * 1000); // Update fact daily
+    }, 24 * 60 * 60 * 1000);
 
     return () => clearInterval(factInterval);
   }, [facts]);
 
-  const handleClaim = useCallback(() => {
+  const handleClaim = useCallback(async () => {
     if (cooldown === null) {
       setPreviousScore(score);
       setScore((prevScore) => prevScore + claimableAmount);
+      setBalance((prevBalance) => prevBalance + claimableAmount);
       setClaimableAmount(0);
-      setCooldown(COOLDOWN_PERIOD); // Set cooldown to 50 minutes (in seconds)
+      setCooldown(COOLDOWN_PERIOD);
+      
+      await updateUserBalance(user!.id, claimableAmount);
+      await saveGameProgress(user!.id, {
+        score: score + claimableAmount,
+        incomeRate,
+        claimableAmount: 0,
+        energy,
+        maxEnergy,
+        multiplier,
+        miningRobotActive,
+        tapBoostActive,
+        chargerActive,
+        cooldown: COOLDOWN_PERIOD,
+        multiplierLevel,
+        miningRobotLevel,
+        tapBoostLevel,
+        maximizerLevel,
+        chargerLevel
+      });
     }
-  }, [cooldown, claimableAmount, score]);
+  }, [cooldown, claimableAmount, score, setBalance, user, incomeRate, energy, maxEnergy, multiplier, miningRobotActive, tapBoostActive, chargerActive, multiplierLevel, miningRobotLevel, tapBoostLevel, maximizerLevel, chargerLevel]);
 
   const handleTapCoin = useCallback(
     (e: React.MouseEvent<HTMLImageElement>) => {
       if (energy > 0) {
         const basePoints = 1;
-        const booster = Math.random() < 0.1 ? Math.floor(Math.random() * 10) + 1 : 0; // 10% chance for a random booster between 1 and 10
+        const booster = Math.random() < 0.1 ? Math.floor(Math.random() * 10) + 1 : 0;
         const points = basePoints + booster;
-        const totalPoints = points * (tapBoostActive ? 2 : 1) * multiplier; // Apply tap boost and multiplier
+        const totalPoints = points * (tapBoostActive ? 2 : 1) * multiplier;
 
         setPreviousScore(score);
-        setScore((prevScore) => prevScore + totalPoints); // Increment score by total points
-        setEnergy((prevEnergy) => prevEnergy - 10); // Decrease energy by 10 on tap
+        setScore((prevScore) => prevScore + totalPoints);
+        setEnergy((prevEnergy) => prevEnergy - 10);
 
         const newClick: Click = {
           id: Date.now(),
@@ -270,10 +288,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
         };
 
         setClicks((prevClicks) => [...prevClicks, newClick]);
-        setWobble(true); // Trigger wobble animation
+        setWobble(true);
+
+        saveGameProgress(user!.id, { score: score + totalPoints, energy: energy - 10 });
       }
     },
-    [energy, multiplier, score, tapBoostActive]
+    [energy, multiplier, score, tapBoostActive, user]
   );
 
   const handleAnimationEnd = useCallback((id: number) => {
@@ -289,7 +309,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
   useEffect(() => {
     const itemInterval = setInterval(() => {
       setRandomItem(randomItems[Math.floor(Math.random() * randomItems.length)]);
-    }, 10000); // Change item every 10 seconds
+    }, 10000);
 
     return () => clearInterval(itemInterval);
   }, [randomItems]);
@@ -352,30 +372,47 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
   );
 
   const handleTaskComplete = useCallback(
-    (reward: number) => {
+    async (reward: number) => {
       setPreviousScore(score);
       setScore(score + reward);
-      setBalance(balance + reward); // Update main balance
+      setBalance(balance + reward);
+
+      await updateUserBalance(user!.id, reward);
+      await saveGameProgress(user!.id, {
+        score: score + reward,
+        incomeRate,
+        claimableAmount,
+        energy,
+        maxEnergy,
+        multiplier,
+        miningRobotActive,
+        tapBoostActive,
+        chargerActive,
+        cooldown,
+        multiplierLevel,
+        miningRobotLevel,
+        tapBoostLevel,
+        maximizerLevel,
+        chargerLevel
+      });
     },
-    [balance, score, setBalance]
+    [balance, score, setBalance, user, incomeRate, claimableAmount, energy, maxEnergy, multiplier, miningRobotActive, tapBoostActive, chargerActive, cooldown, multiplierLevel, miningRobotLevel, tapBoostLevel, maximizerLevel, chargerLevel]
   );
 
   const level = useMemo(() => getLevel(balance), [balance]);
   const levelIndex = LEVELS.findIndex(l => l === level);
 
-  const leaderboard = useMemo(
-    () => [
-      { username: 'Player1', level: 'Ultra Rich', balance: 1500000 },
-      { username: 'Player2', level: 'Rich', balance: 900000 },
-      { username: 'Player3', level: 'Affluent', balance: 450000 },
-      { username: 'Player4', level: 'Wealthy', balance: 120000 },
-      { username: 'Player5', level: 'Comfortable', balance: 75000 },
-    ],
-    []
-  );
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      const data = await getLeaderboard();
+      setLeaderboard(data);
+    };
+
+    fetchLeaderboard();
+  }, []);
 
   if (showTasks) {
-    return <TaskScreen onBack={() => setShowTasks(false)} onTaskComplete={handleTaskComplete} balance={balance} setBalance={setBalance} />;
+    return <TaskScreen onBack={() => setShowTasks(false)} onTaskComplete={handleTaskComplete} balance={balance} setBalance={setBalance} userId={user!.id} />;
   }
 
   return (
@@ -483,7 +520,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
           <div className="w-full max-w-md bg-white rounded-lg p-4 mb-4 shadow-lg text-center">
             <div className="flex flex-col items-center">
               <animated.h1 className="text-3xl font-bold text-gray-800">
-                {animatedScore.number.to((n) => `${n.toFixed(2)}`)} 
+                {animatedScore.number.to((n) => `$${n.toFixed(2)}`)}
               </animated.h1>
               <p className="text-xs text-gray-500 mt-1">Storge Coin Balance</p>
               <div className="w-full bg-gray-300 rounded-full h-3 mt-2 mb-2">
@@ -504,7 +541,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
                 aria-label="Tap to earn coins"
               />
               <small className="text-gray-500">Storges Farming</small>
-              <p className="text-xl text-yellow-500">{claimableAmount.toFixed(2)} STG</p>
+              <p className="text-xl text-yellow-500">${claimableAmount.toFixed(2)}</p>
               <button
                 onClick={handleClaim}
                 className="bg-green-600 text-white w-full px-2 py-1 mt-2 rounded-lg hover:bg-green-700 transition duration-300"
@@ -514,19 +551,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
                 {cooldown === null ? 'Claim Rewards' : `Next claim in ${formatTime(remainingTime!)}`}
               </button>
               <div className="flex justify-between w-full mt-2">
-              <div className="w-full max-w-md p-4 mb-5 mt-5 flex justify-between items-center">
+              <div className="w-full max-w-md p-4 mb-4 flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <div>
                 <p className="text-xs text-gray-500">{fact}</p>
               </div>
             </div>
           </div>
-                {/* <button
-                  onClick={() => setShowLeaderboard(true)}
+                <button
+                  onClick={() => setShowTasks(true)}
                   className="bg-blue-600 w-full text-white px-2 py-1 rounded-lg hover:bg-blue-700 transition duration-300"
                 >
-                  View Leaderboard
-                </button> */}
+                  Tasks
+                </button>
               </div>
             </div>
           </div>

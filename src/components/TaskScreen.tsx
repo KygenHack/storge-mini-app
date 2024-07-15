@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSpring, animated } from '@react-spring/web';
+import { getUserProfile, updateUserBalance, updateUserTasks, Task } from '../firebaseUtils';
 
-interface Task {
-  id: number;
-  description: string;
-  reward: number;
-  completed: boolean;
+interface TaskScreenProps {
+  onBack: () => void;
+  onTaskComplete: (reward: number) => void;
+  balance: number;
+  setBalance: React.Dispatch<React.SetStateAction<number>>;
+  userId: string;
 }
 
 const tasksData: Task[] = [
@@ -15,23 +17,34 @@ const tasksData: Task[] = [
   { id: 4, description: 'Reach a score of 1000', reward: 40, completed: false },
 ];
 
-interface TaskScreenProps {
-  onBack: () => void;
-  onTaskComplete: (reward: number) => void;
-  balance: number;
-  setBalance: React.Dispatch<React.SetStateAction<number>>;
-}
-
-const TaskScreen: React.FC<TaskScreenProps> = ({ onBack, onTaskComplete, balance, setBalance }) => {
+const TaskScreen: React.FC<TaskScreenProps> = ({ onBack, onTaskComplete, balance, setBalance, userId }) => {
   const [tasks, setTasks] = useState<Task[]>(tasksData);
-  const animatedBalance = useSpring({ from: { number: 0 }, number: balance, delay: 200 });
+  const [previousBalance, setPreviousBalance] = useState<number>(balance);
+  const animatedScore = useSpring({ from: { number: previousBalance }, number: balance, delay: 200 });
 
-  const handleTaskComplete = (taskId: number) => {
+  useEffect(() => {
+    const fetchTasks = async () => {
+      const userProfile = await getUserProfile(userId);
+      if (userProfile && userProfile.tasks) {
+        setTasks(userProfile.tasks);
+      } else {
+        setTasks(tasksData);
+      }
+    };
+
+    fetchTasks();
+    setPreviousBalance(balance);
+  }, [balance, userId]);
+
+  const handleTaskComplete = async (taskId: number) => {
     setTasks(tasks.map(task => task.id === taskId ? { ...task, completed: true } : task));
     const task = tasks.find(task => task.id === taskId);
     if (task) {
       onTaskComplete(task.reward);
       setBalance(prevBalance => prevBalance + task.reward);
+
+      await updateUserTasks(userId, tasks.map(task => task.id === taskId ? { ...task, completed: true } : task));
+      await updateUserBalance(userId, balance + task.reward);
     }
   };
 
@@ -45,7 +58,7 @@ const TaskScreen: React.FC<TaskScreenProps> = ({ onBack, onTaskComplete, balance
       </button>
       <div className="bg-white text-gray-900 rounded-lg shadow-md p-6 w-full max-w-6xl mb-6">
         <h2 className="text-3xl font-bold mb-4 text-center">
-          Main Balance: <animated.span>{animatedBalance.number.to(n => `$${n.toFixed(2)}`)}</animated.span>
+          Main Balance: <animated.span>{animatedScore.number.to((n) => `${n.toFixed(2)}`)}</animated.span>
         </h2>
         <h3 className="text-xl font-semibold mb-4 text-center">Tasks</h3>
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
