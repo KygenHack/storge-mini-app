@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useInitData } from '@telegram-apps/sdk-react';
-import { InitData, User } from '../types';
 import { useSpring, animated } from '@react-spring/web';
 import TaskScreen from './TaskScreen';
 import Modal from 'react-modal';
 import { getUserProfile, updateUserBalance, getLeaderboard, saveGameProgress } from '../firebaseUtils';
+import useLocalStorage from 'use-local-storage';
 
 Modal.setAppElement('#root');
 
@@ -19,6 +19,22 @@ interface Click {
   x: number;
   y: number;
   points: number;
+}
+
+interface UserData {
+  id: string;
+  firstName: string;
+  username: string;
+  isBot: boolean;
+  lastName: string;
+  languageCode: string;
+  photoUrl: string;
+  isPremium: boolean;
+  allowsWriteToPm: boolean;
+}
+
+interface InitData {
+  user: UserData;
 }
 
 const INITIAL_SCORE = 0;
@@ -72,32 +88,32 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
   const telegramInitData = useInitData();
   const userData = useFetchInitData(telegramInitData);
 
-  const user: User | null = telegramInitData && telegramInitData.user
+  const user: UserData | null = telegramInitData && telegramInitData.user
     ? {
         id: telegramInitData.user.id.toString(),
         firstName: telegramInitData.user.firstName || '',
-        username: telegramInitData.user.username,
-        isBot: telegramInitData.user.isBot,
-        lastName: telegramInitData.user.lastName,
-        languageCode: telegramInitData.user.languageCode,
-        photoUrl: telegramInitData.user.photoUrl,
-        isPremium: telegramInitData.user.isPremium,
-        allowsWriteToPm: telegramInitData.user.allowsWriteToPm,
+        username: telegramInitData.user.username || '',
+        isBot: telegramInitData.user.isBot || false,
+        lastName: telegramInitData.user.lastName || '',
+        languageCode: telegramInitData.user.languageCode || '',
+        photoUrl: telegramInitData.user.photoUrl || '',
+        isPremium: telegramInitData.user.isPremium || false,
+        allowsWriteToPm: telegramInitData.user.allowsWriteToPm || false,
       }
     : userData
     ? userData.user
     : null;
 
-  const [score, setScore] = useState<number>(INITIAL_SCORE);
-  const [incomeRate, setIncomeRate] = useState<number>(INITIAL_INCOME_RATE);
-  const [claimableAmount, setClaimableAmount] = useState<number>(0);
+  const [score, setScore] = useLocalStorage<number>('score', INITIAL_SCORE);
+  const [incomeRate, setIncomeRate] = useLocalStorage<number>('incomeRate', INITIAL_INCOME_RATE);
+  const [claimableAmount, setClaimableAmount] = useLocalStorage<number>('claimableAmount', 0);
   const [clicks, setClicks] = useState<Click[]>([]);
-  const [energy, setEnergy] = useState<number>(INITIAL_ENERGY);
-  const [maxEnergy, setMaxEnergy] = useState<number>(INITIAL_MAX_ENERGY);
-  const [multiplier, setMultiplier] = useState<number>(1);
-  const [miningRobotActive, setMiningRobotActive] = useState<boolean>(false);
-  const [tapBoostActive, setTapBoostActive] = useState<boolean>(false);
-  const [chargerActive, setChargerActive] = useState<boolean>(false);
+  const [energy, setEnergy] = useLocalStorage<number>('energy', INITIAL_ENERGY);
+  const [maxEnergy, setMaxEnergy] = useLocalStorage<number>('maxEnergy', INITIAL_MAX_ENERGY);
+  const [multiplier, setMultiplier] = useLocalStorage<number>('multiplier', 1);
+  const [miningRobotActive, setMiningRobotActive] = useLocalStorage<boolean>('miningRobotActive', false);
+  const [tapBoostActive, setTapBoostActive] = useLocalStorage<boolean>('tapBoostActive', false);
+  const [chargerActive, setChargerActive] = useLocalStorage<boolean>('chargerActive', false);
   const [cooldown, setCooldown] = useState<number | null>(null);
   const [remainingTime, setRemainingTime] = useState<number | null>(null);
   const [showShop, setShowShop] = useState<boolean>(false);
@@ -107,11 +123,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
   const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
 
-  const [multiplierLevel, setMultiplierLevel] = useState<number>(1);
-  const [miningRobotLevel, setMiningRobotLevel] = useState<number>(1);
-  const [tapBoostLevel, setTapBoostLevel] = useState<number>(1);
-  const [maximizerLevel, setMaximizerLevel] = useState<number>(1);
-  const [chargerLevel, setChargerLevel] = useState<number>(1);
+  const [multiplierLevel, setMultiplierLevel] = useLocalStorage<number>('multiplierLevel', 1);
+  const [miningRobotLevel, setMiningRobotLevel] = useLocalStorage<number>('miningRobotLevel', 1);
+  const [tapBoostLevel, setTapBoostLevel] = useLocalStorage<number>('tapBoostLevel', 1);
+  const [maximizerLevel, setMaximizerLevel] = useLocalStorage<number>('maximizerLevel', 1);
+  const [chargerLevel, setChargerLevel] = useLocalStorage<number>('chargerLevel', 1);
 
   const [previousScore, setPreviousScore] = useState<number>(INITIAL_SCORE);
   const animatedScore = useSpring({ from: { number: previousScore }, number: score, delay: 200 });
@@ -123,6 +139,32 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
     onRest: () => setWobble(false),
   });
 
+  useEffect(() => {
+    if (user) {
+      const fetchUserData = async () => {
+        const profile = await getUserProfile(user.id);
+        if (profile) {
+          setScore(profile.score || INITIAL_SCORE);
+          setIncomeRate(profile.incomeRate || INITIAL_INCOME_RATE);
+          setClaimableAmount(profile.claimableAmount || 0);
+          setEnergy(profile.energy || INITIAL_ENERGY);
+          setMaxEnergy(profile.maxEnergy || INITIAL_MAX_ENERGY);
+          setMultiplier(profile.multiplier || 1);
+          setMiningRobotActive(profile.miningRobotActive || false);
+          setTapBoostActive(profile.tapBoostActive || false);
+          setChargerActive(profile.chargerActive || false);
+          setMultiplierLevel(profile.multiplierLevel || 1);
+          setMiningRobotLevel(profile.miningRobotLevel || 1);
+          setTapBoostLevel(profile.tapBoostLevel || 1);
+          setMaximizerLevel(profile.maximizerLevel || 1);
+          setChargerLevel(profile.chargerLevel || 1);
+        }
+      };
+      fetchUserData();
+    }
+  }, [user]);
+
+  // Cooldown timer for claiming rewards
   useEffect(() => {
     if (cooldown !== null) {
       const endTime = Date.now() + cooldown * 1000;
@@ -139,42 +181,43 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
     }
   }, [cooldown]);
 
+  // Update claimable amount periodically based on income rate
   useEffect(() => {
     const incomeInterval = setInterval(() => {
-      setClaimableAmount((prevAmount) => prevAmount + incomeRate);
+      setClaimableAmount((prevAmount = 0) => prevAmount + incomeRate);
     }, 5000);
-
     return () => clearInterval(incomeInterval);
   }, [incomeRate]);
 
+  // Recharge energy periodically
   useEffect(() => {
     const interval = setInterval(() => {
-      setEnergy((prevEnergy) => Math.min(prevEnergy + (chargerActive ? 2 : 1), maxEnergy));
+      setEnergy((prevEnergy = 0) => Math.min(prevEnergy + (chargerActive ? 2 : 1), maxEnergy));
     }, 100);
-
     return () => clearInterval(interval);
   }, [chargerActive, maxEnergy]);
 
+  // Mining robot automatic score increase
   useEffect(() => {
     if (miningRobotActive) {
       const miningInterval = setInterval(() => {
-        setScore((prevScore) => prevScore + 10);
+        setScore((prevScore = 0) => prevScore + 10);
       }, 5000);
-
       return () => clearInterval(miningInterval);
     }
   }, [miningRobotActive]);
 
+  // Tap boost duration management
   useEffect(() => {
     if (tapBoostActive) {
       const tapBoostTimeout = setTimeout(() => {
         setTapBoostActive(false);
       }, 30000);
-
       return () => clearTimeout(tapBoostTimeout);
     }
   }, [tapBoostActive]);
 
+  // Daily quotes and facts
   const quotes = useMemo(
     () => [
       "The future of finance is decentralized.",
@@ -197,13 +240,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
       const quoteIndex = today % quotes.length;
       setQuote(quotes[quoteIndex]);
     };
-
     getDailyQuote();
-
     const quoteInterval = setInterval(() => {
       getDailyQuote();
     }, 24 * 60 * 60 * 1000);
-
     return () => clearInterval(quoteInterval);
   }, [quotes]);
 
@@ -229,24 +269,22 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
       const factIndex = today % facts.length;
       setFact(facts[factIndex]);
     };
-
     getDailyFact();
-
     const factInterval = setInterval(() => {
       getDailyFact();
     }, 24 * 60 * 60 * 1000);
-
     return () => clearInterval(factInterval);
   }, [facts]);
 
+  // Handle claiming rewards
   const handleClaim = useCallback(async () => {
     if (cooldown === null) {
       setPreviousScore(score);
-      setScore((prevScore) => prevScore + claimableAmount);
-      setBalance((prevBalance) => prevBalance + claimableAmount);
+      setScore((prevScore = 0) => prevScore + claimableAmount);
+      setBalance((prevBalance = 0) => prevBalance + claimableAmount);
       setClaimableAmount(0);
       setCooldown(COOLDOWN_PERIOD);
-      
+
       await updateUserBalance(user!.id, claimableAmount);
       await saveGameProgress(user!.id, {
         score: score + claimableAmount,
@@ -268,6 +306,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
     }
   }, [cooldown, claimableAmount, score, setBalance, user, incomeRate, energy, maxEnergy, multiplier, miningRobotActive, tapBoostActive, chargerActive, multiplierLevel, miningRobotLevel, tapBoostLevel, maximizerLevel, chargerLevel]);
 
+  // Handle tapping on the coin
   const handleTapCoin = useCallback(
     (e: React.MouseEvent<HTMLImageElement>) => {
       if (energy > 0) {
@@ -277,8 +316,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
         const totalPoints = points * (tapBoostActive ? 2 : 1) * multiplier;
 
         setPreviousScore(score);
-        setScore((prevScore) => prevScore + totalPoints);
-        setEnergy((prevEnergy) => prevEnergy - 10);
+        setScore((prevScore = 0) => prevScore + totalPoints);
+        setEnergy((prevEnergy = 0) => prevEnergy - 10);
 
         const newClick: Click = {
           id: Date.now(),
@@ -310,7 +349,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
     const itemInterval = setInterval(() => {
       setRandomItem(randomItems[Math.floor(Math.random() * randomItems.length)]);
     }, 10000);
-
     return () => clearInterval(itemInterval);
   }, [randomItems]);
 
@@ -410,6 +448,33 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
 
     fetchLeaderboard();
   }, []);
+
+  // Periodic saving of user data to Firebase
+  useEffect(() => {
+    if (user) {
+      const saveInterval = setInterval(() => {
+        saveGameProgress(user.id, {
+          score,
+          incomeRate,
+          claimableAmount,
+          energy,
+          maxEnergy,
+          multiplier,
+          miningRobotActive,
+          tapBoostActive,
+          chargerActive,
+          cooldown,
+          multiplierLevel,
+          miningRobotLevel,
+          tapBoostLevel,
+          maximizerLevel,
+          chargerLevel
+        });
+      }, 60000); // Save every 60 seconds
+
+      return () => clearInterval(saveInterval);
+    }
+  }, [user, score, incomeRate, claimableAmount, energy, maxEnergy, multiplier, miningRobotActive, tapBoostActive, chargerActive, cooldown, multiplierLevel, miningRobotLevel, tapBoostLevel, maximizerLevel, chargerLevel]);
 
   if (showTasks) {
     return <TaskScreen onBack={() => setShowTasks(false)} onTaskComplete={handleTaskComplete} balance={balance} setBalance={setBalance} userId={user!.id} />;
@@ -519,10 +584,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
           )}
           <div className="w-full max-w-md bg-white rounded-lg p-4 mb-4 shadow-lg text-center">
             <div className="flex flex-col items-center">
+            <p className="text-xs text-gray-500 mt-1">Coin Balance</p>
               <animated.h1 className="text-3xl font-bold text-gray-800">
-                {animatedScore.number.to((n) => `$${n.toFixed(2)}`)}
+                {animatedScore.number.to((n) => `${n.toFixed(0)}`)}
               </animated.h1>
-              <p className="text-xs text-gray-500 mt-1">Storge Coin Balance</p>
               <div className="w-full bg-gray-300 rounded-full h-3 mt-2 mb-2">
                 <div
                   className="bg-green-500 h-3 rounded-full"
@@ -541,7 +606,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
                 aria-label="Tap to earn coins"
               />
               <small className="text-gray-500">Storges Farming</small>
-              <p className="text-xl text-yellow-500">${claimableAmount.toFixed(2)}</p>
+              <p className="text-xl text-yellow-500">{claimableAmount.toFixed(1)}</p>
               <button
                 onClick={handleClaim}
                 className="bg-green-600 text-white w-full px-2 py-1 mt-2 rounded-lg hover:bg-green-700 transition duration-300"
@@ -558,12 +623,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
               </div>
             </div>
           </div>
-                <button
-                  onClick={() => setShowTasks(true)}
-                  className="bg-blue-600 w-full text-white px-2 py-1 rounded-lg hover:bg-blue-700 transition duration-300"
-                >
-                  Tasks
-                </button>
               </div>
             </div>
           </div>
