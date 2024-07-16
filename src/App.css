@@ -37,3 +37,8 @@
     transform: rotate(360deg);
   }
 }
+
+.text-ref {
+  font-size: 8.75px;
+  line-height: 1rem;
+}

@@ -20,33 +20,33 @@ const TaskScreen: React.FC<TaskScreenProps> = ({ onTaskComplete, referralCount }
         <TaskItem
           title="Invite 5 frens"
           progress={`${referralCount} / 5`}
-          points="+ 120 BP"
+          points="+ 120 STG"
           buttonText={referralCount >= 5 ? "Claim" : "Invite"}
           onClick={() => {
             if (referralCount >= 5) onTaskComplete(120);
           }}
         />
         <TaskItem
-          title="Boost Blum"
-          points="+ 200 BP"
+          title="Boost Storge"
+          points="+ 200 STG"
           buttonText="Claim"
           onClick={() => onTaskComplete(200)}
         />
-        <TaskItem
-          title="Thank you BPs"
-          points="+ 200 BP"
+        {/* <TaskItem
+          title="Thank you B"
+          points="+ 200 STG"
           buttonText="Claim"
           onClick={() => onTaskComplete(200)}
-        />
+        /> */}
         <TaskItem
-          title="Farm points"
-          progress="1,000.00 / 1,000.00"
-          points="+ 150 BP"
+          title="Farm Storge"
+          progress="1,000.00"
+          points="+ 150 STG"
           buttonText="Claim"
           onClick={() => onTaskComplete(150)}
         />
         <TaskItem
-          title="Subscribe to Blum Telegram"
+          title="Subscribe to Storge Telegram"
           points="+ 90 BP"
           buttonText="Claim"
           onClick={() => onTaskComplete(90)}
