@@ -8,14 +8,26 @@ import Navbar from './components/NavBar';
 import TaskScreen from './components/TaskScreen';
 import ReferralScreen from './components/ReferralScreen';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { getUserProfile, saveUserProfile } from './firebaseUtils';
+import { getUserProfile, saveUserProfile, updateUserBalance } from './firebaseUtils';
 import { auth } from './firebase';
 
-const App: React.FC<{ balance: number; setBalance: React.Dispatch<React.SetStateAction<number>> }> = ({ balance, setBalance }) => {
+const App: React.FC<{ balance: number; setBalance: React.Dispatch<React.SetStateAction<number>>; referralCount: number; setReferralCount: React.Dispatch<React.SetStateAction<number>> }> = ({ balance, setBalance, referralCount, setReferralCount }) => {
   const telegramInitData = useInitData();
   const [userData, setUserData] = useState<any | null>(null);
   const [screen, setScreen] = useState<'splash' | 'home' | 'categories'>('splash');
   const [user] = useAuthState(auth);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (user) {
+        const userProfile = await getUserProfile(user.uid);
+        if (userProfile) {
+          setReferralCount(userProfile.referralCount || 0);
+        }
+      }
+    };
+    fetchUserData();
+  }, [user, setReferralCount]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -26,7 +38,6 @@ const App: React.FC<{ balance: number; setBalance: React.Dispatch<React.SetState
           setUserData(profile);
           setBalance(profile.balance || 0);
         } else {
-          // If no profile, create a new one with initial balance
           const newProfile = { balance: 0 }; // Initial balance
           await saveUserProfile(userId, newProfile);
           setUserData(newProfile);
@@ -34,23 +45,20 @@ const App: React.FC<{ balance: number; setBalance: React.Dispatch<React.SetState
         }
       }
     };
-
     fetchUserProfile();
   }, [user, setBalance]);
 
   useEffect(() => {
     if (process.env.REACT_APP_ENV !== 'development' && !telegramInitData) {
-      // Fetch real data from Telegram
       const fetchData = async () => {
         try {
-          const response = await fetch('/api/telegram-init-data'); // Replace with your actual endpoint
+          const response = await fetch('/api/telegram-init-data');
           const data = await response.json();
           setUserData(data);
         } catch (error) {
           console.error('Failed to fetch init data:', error);
         }
       };
-
       fetchData();
     }
   }, [telegramInitData]);
@@ -65,7 +73,7 @@ const App: React.FC<{ balance: number; setBalance: React.Dispatch<React.SetState
   if (screen === 'splash') {
     return <SplashScreen />;
   } else if (screen === 'home') {
-    return <HomeScreen onStart={handleStart} balance={balance} setBalance={setBalance} />;
+    return <HomeScreen onStart={handleStart} balance={balance} setBalance={setBalance} referralCount={referralCount} />;
   } else if (screen === 'categories') {
     return <CategoriesScreen />;
   }
@@ -75,6 +83,7 @@ const App: React.FC<{ balance: number; setBalance: React.Dispatch<React.SetState
 
 const Root: React.FC = () => {
   const [balance, setBalance] = useState<number>(0); // Shared state for balance
+  const [referralCount, setReferralCount] = useState<number>(0); // Shared state for referral count
   const [user] = useAuthState(auth);
 
   const handleTaskComplete = async (reward: number) => {
@@ -90,11 +99,11 @@ const Root: React.FC = () => {
     <SDKProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<App balance={balance} setBalance={setBalance} />} />
-          <Route path="/home" element={<HomeScreen onStart={() => {}} balance={balance} setBalance={setBalance} />} />
+          <Route path="/" element={<App balance={balance} setBalance={setBalance} referralCount={referralCount} setReferralCount={setReferralCount} />} />
+          <Route path="/home" element={<HomeScreen onStart={() => {}} balance={balance} setBalance={setBalance} referralCount={referralCount} />} />
           <Route 
             path="/tasks" 
-            element={<TaskScreen onBack={() => window.history.back()} onTaskComplete={handleTaskComplete} balance={balance} setBalance={setBalance} userId={user ? user.uid : ''} />} 
+            element={<TaskScreen onTaskComplete={handleTaskComplete} referralCount={referralCount} />} // Pass the referralCount prop
           />
           <Route path="/frens" element={<ReferralScreen />} />
         </Routes>

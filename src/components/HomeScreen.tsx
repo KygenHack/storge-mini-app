@@ -12,6 +12,7 @@ interface HomeScreenProps {
   onStart: () => void;
   balance: number;
   setBalance: React.Dispatch<React.SetStateAction<number>>;
+  referralCount: number; // Added referralCount prop
 }
 
 interface Click {
@@ -84,7 +85,7 @@ const useFetchInitData = (telegramInitData: any) => {
   return userData;
 };
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, referralCount }) => {
   const telegramInitData = useInitData();
   const userData = useFetchInitData(telegramInitData);
 
@@ -114,7 +115,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
   const [miningRobotActive, setMiningRobotActive] = useLocalStorage<boolean>('miningRobotActive', false);
   const [tapBoostActive, setTapBoostActive] = useLocalStorage<boolean>('tapBoostActive', false);
   const [chargerActive, setChargerActive] = useLocalStorage<boolean>('chargerActive', false);
-  const [cooldown, setCooldown] = useState<number | null>(null);
+  const [cooldown, setCooldown] = useLocalStorage<number | null>('cooldown', null);
   const [remainingTime, setRemainingTime] = useState<number | null>(null);
   const [showShop, setShowShop] = useState<boolean>(false);
   const [quote, setQuote] = useState<string>('');
@@ -140,32 +141,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
   });
 
   useEffect(() => {
-    if (user) {
-      const fetchUserData = async () => {
-        const profile = await getUserProfile(user.id);
-        if (profile) {
-          setScore(profile.score || INITIAL_SCORE);
-          setIncomeRate(profile.incomeRate || INITIAL_INCOME_RATE);
-          setClaimableAmount(profile.claimableAmount || 0);
-          setEnergy(profile.energy || INITIAL_ENERGY);
-          setMaxEnergy(profile.maxEnergy || INITIAL_MAX_ENERGY);
-          setMultiplier(profile.multiplier || 1);
-          setMiningRobotActive(profile.miningRobotActive || false);
-          setTapBoostActive(profile.tapBoostActive || false);
-          setChargerActive(profile.chargerActive || false);
-          setMultiplierLevel(profile.multiplierLevel || 1);
-          setMiningRobotLevel(profile.miningRobotLevel || 1);
-          setTapBoostLevel(profile.tapBoostLevel || 1);
-          setMaximizerLevel(profile.maximizerLevel || 1);
-          setChargerLevel(profile.chargerLevel || 1);
-        }
-      };
-      fetchUserData();
-    }
-  }, [user]);
-
-  // Cooldown timer for claiming rewards
-  useEffect(() => {
     if (cooldown !== null) {
       const endTime = Date.now() + cooldown * 1000;
       const interval = setInterval(() => {
@@ -181,7 +156,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
     }
   }, [cooldown]);
 
-  // Update claimable amount periodically based on income rate
   useEffect(() => {
     const incomeInterval = setInterval(() => {
       setClaimableAmount((prevAmount = 0) => prevAmount + incomeRate);
@@ -189,7 +163,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
     return () => clearInterval(incomeInterval);
   }, [incomeRate]);
 
-  // Recharge energy periodically
   useEffect(() => {
     const interval = setInterval(() => {
       setEnergy((prevEnergy = 0) => Math.min(prevEnergy + (chargerActive ? 2 : 1), maxEnergy));
@@ -197,7 +170,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
     return () => clearInterval(interval);
   }, [chargerActive, maxEnergy]);
 
-  // Mining robot automatic score increase
   useEffect(() => {
     if (miningRobotActive) {
       const miningInterval = setInterval(() => {
@@ -207,7 +179,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
     }
   }, [miningRobotActive]);
 
-  // Tap boost duration management
   useEffect(() => {
     if (tapBoostActive) {
       const tapBoostTimeout = setTimeout(() => {
@@ -217,7 +188,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
     }
   }, [tapBoostActive]);
 
-  // Daily quotes and facts
   const quotes = useMemo(
     () => [
       "The future of finance is decentralized.",
@@ -240,10 +210,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
       const quoteIndex = today % quotes.length;
       setQuote(quotes[quoteIndex]);
     };
+
     getDailyQuote();
+
     const quoteInterval = setInterval(() => {
       getDailyQuote();
     }, 24 * 60 * 60 * 1000);
+
     return () => clearInterval(quoteInterval);
   }, [quotes]);
 
@@ -269,14 +242,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
       const factIndex = today % facts.length;
       setFact(facts[factIndex]);
     };
+
     getDailyFact();
+
     const factInterval = setInterval(() => {
       getDailyFact();
     }, 24 * 60 * 60 * 1000);
+
     return () => clearInterval(factInterval);
   }, [facts]);
 
-  // Handle claiming rewards
   const handleClaim = useCallback(async () => {
     if (cooldown === null) {
       setPreviousScore(score);
@@ -284,7 +259,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
       setBalance((prevBalance = 0) => prevBalance + claimableAmount);
       setClaimableAmount(0);
       setCooldown(COOLDOWN_PERIOD);
-
+      
       await updateUserBalance(user!.id, claimableAmount);
       await saveGameProgress(user!.id, {
         score: score + claimableAmount,
@@ -306,7 +281,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
     }
   }, [cooldown, claimableAmount, score, setBalance, user, incomeRate, energy, maxEnergy, multiplier, miningRobotActive, tapBoostActive, chargerActive, multiplierLevel, miningRobotLevel, tapBoostLevel, maximizerLevel, chargerLevel]);
 
-  // Handle tapping on the coin
   const handleTapCoin = useCallback(
     (e: React.MouseEvent<HTMLImageElement>) => {
       if (energy > 0) {
@@ -349,6 +323,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
     const itemInterval = setInterval(() => {
       setRandomItem(randomItems[Math.floor(Math.random() * randomItems.length)]);
     }, 10000);
+
     return () => clearInterval(itemInterval);
   }, [randomItems]);
 
@@ -449,35 +424,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance })
     fetchLeaderboard();
   }, []);
 
-  // Periodic saving of user data to Firebase
-  useEffect(() => {
-    if (user) {
-      const saveInterval = setInterval(() => {
-        saveGameProgress(user.id, {
-          score,
-          incomeRate,
-          claimableAmount,
-          energy,
-          maxEnergy,
-          multiplier,
-          miningRobotActive,
-          tapBoostActive,
-          chargerActive,
-          cooldown,
-          multiplierLevel,
-          miningRobotLevel,
-          tapBoostLevel,
-          maximizerLevel,
-          chargerLevel
-        });
-      }, 60000); // Save every 60 seconds
-
-      return () => clearInterval(saveInterval);
-    }
-  }, [user, score, incomeRate, claimableAmount, energy, maxEnergy, multiplier, miningRobotActive, tapBoostActive, chargerActive, cooldown, multiplierLevel, miningRobotLevel, tapBoostLevel, maximizerLevel, chargerLevel]);
-
   if (showTasks) {
-    return <TaskScreen onBack={() => setShowTasks(false)} onTaskComplete={handleTaskComplete} balance={balance} setBalance={setBalance} userId={user!.id} />;
+    return <TaskScreen onTaskComplete={handleTaskComplete} referralCount={referralCount} />;
   }
 
   return (
