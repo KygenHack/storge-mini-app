@@ -476,7 +476,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
                   </button>
                 </div>
                 <div className="bg-blue-100 rounded-lg p-4 shadow-md">
-                  <p className="text-lg font-bold text-gray-800">Mining Robot</p>
+                  <p className="text-lg font-bold text-gray-800">Miner</p>
                   <p className="text-sm text-gray-600">Level {miningRobotLevel}</p>
                   <p className="text-sm text-gray-600">Cost: ${miningRobotLevel * BOOST_COST_MULTIPLIER}</p>
                   <button
