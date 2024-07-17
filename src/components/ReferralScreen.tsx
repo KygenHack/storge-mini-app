@@ -101,7 +101,7 @@ const ReferralScreen: React.FC = () => {
                 <img src={referral.photoUrl || 'https://storges.xyz/images/storges.png'} alt="Referral" className="w-10 h-10 rounded-full mr-4" />
                 <div>
                   <p className="font-bold">{referral.username}</p>
-                  <p className="text-gray-400 text-xs">{referral.referralsCount}</p>
+                  <p className="text-gray-400 text-xs">👥 {referral.referralsCount}</p>
                 </div>
               </div>
               <p className="font-bold text-lg">{(referral.balance || 0).toLocaleString()} STG</p>
