@@ -60,7 +60,7 @@ const ReferralScreen: React.FC = () => {
         </button>
         <div className="flex flex-col items-center mb-6">
           <FaUserFriends className="text-6xl mb-4" />
-          <h1 className="text-3xl font-bold mb-2">Invite Friends</h1>
+          <h1 className="text-3xl font-bold mb-2 text-center">Invite Friends</h1>
           <p className="text-gray-400 text-center mb-4">Score 10% from buddies + 2.5% from their referrals. Get a 🎟 play pass for each friend.</p>
           <div className="bg-gray-700 p-4 rounded-lg mb-4 w-full">
             <p className="text-gray-300 text-center">Calculating...</p>
@@ -101,7 +101,7 @@ const ReferralScreen: React.FC = () => {
                 <img src={referral.photoUrl || 'https://storges.xyz/images/storges.png'} alt="Referral" className="w-10 h-10 rounded-full mr-4" />
                 <div>
                   <p className="font-bold">{referral.username}</p>
-                  <p className="text-gray-400 text-xs">👥 {referral.referralsCount}</p>
+                  <p className="text-gray-400 text-xs">{referral.referralsCount}</p>
                 </div>
               </div>
               <p className="font-bold text-lg">{(referral.balance || 0).toLocaleString()} STG</p>
