@@ -50,66 +50,53 @@ const ReferralScreen: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-black text-white flex flex-col items-center p-6">
-      <div className="bg-black text-white rounded-lg shadow-md p-6 w-full max-w-6xl mb-6 text-center">
+    <div className="relative min-h-screen bg-gray-900 text-white flex flex-col items-center p-4">
+      <div className="bg-gray-800 text-white rounded-lg shadow-md p-6 w-full max-w-3xl mb-6">
         <button 
           onClick={() => window.history.back()} 
-          className="absolute top-4 left-4 bg-gray-800 text-white px-6 py-2 rounded-full shadow-lg hover:bg-gray-700 transition duration-300"
+          className="absolute top-4 left-4 bg-gray-700 text-white px-4 py-2 rounded-full shadow-lg hover:bg-gray-600 transition duration-300"
         >
           Cancel
         </button>
-        <div className="flex justify-center items-center mb-4">
-          <span className="text-4xl">👨‍👩‍👧‍👦</span>
-        </div>
-        <h1 className="text-xl font-bold mb-4">Invite Frens</h1>
-        <div className="bg-gray-800 p-4 rounded-lg mb-4">
-          <p className="text-gray-400 mb-2">Calculating...</p>
-        </div>
-        <p className="text-gray-400 text-xs mb-6">Score 10% from buddies + 2.5% from their referrals. Get a 🎟 play pass for each fren.</p>
-        <div className="text-left mb-6">
-          {referralCount !== null ? (
-            <h2 className="text-lg font-bold mb-2">{referralCount} fren{referralCount !== 1 && 's'}</h2>
-          ) : (
-            <h2 className="text-lg font-bold mb-2">No referrals yet</h2>
-          )}
-          {referrals.length > 0 ? (
-            referrals.map((referral, index) => (
-              <div key={index} className="flex justify-between items-center bg-gray-900 p-4 rounded-lg mb-2">
-                <div className="flex items-center">
-                  <img src={referral.photoUrl || 'https://storges.xyz/images/storges.png'} alt="Referral" className="w-10 h-10 rounded-full mr-4" />
-                  <div>
-                    <p className="font-bold">{referral.username}</p>
-                    <p className="text-gray-400 text-xs">👥 {referral.referralsCount}</p>
-                  </div>
-                </div>
-                <p className="font-bold text-lg">{(referral.balance || 0).toLocaleString()} STG</p>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-400">No referrals yet</p>
-          )}
-        </div>
-        <button 
-          onClick={generateReferralLink} 
-          className="bg-green-600 text-white px-6 py-2 rounded-full shadow-lg hover:bg-green-700 transition duration-300 mb-6"
-        >
-          Invite a fren (10 left)
-        </button>
-        {referralLink && (
-          <div className="mt-4">
-            <p className="text-lg">Your Referral Link:</p>
-            <div className="flex items-center justify-center mt-2">
-              <FaLink className="mr-2" />
-              <a href={referralLink} className="text-blue-600 hover:underline">{referralLink}</a>
-            </div>
+        <div className="flex flex-col items-center mb-6">
+          <FaUserFriends className="text-6xl mb-4" />
+          <h1 className="text-3xl font-bold mb-2">Invite Friends</h1>
+          <p className="text-gray-400 text-center mb-4">Score 10% from buddies + 2.5% from their referrals. Get a 🎟 play pass for each friend.</p>
+          <div className="bg-gray-700 p-4 rounded-lg mb-4 w-full">
+            <p className="text-gray-300 text-center">Calculating...</p>
           </div>
-        )}
+          <button 
+            onClick={generateReferralLink} 
+            className="bg-blue-600 text-white px-6 py-2 rounded-full shadow-lg hover:bg-blue-700 transition duration-300 mb-4"
+          >
+            Generate Link
+          </button>
+          {referralLink && (
+            <div className="w-full">
+              <p className="text-lg text-center mb-2">Your Referral Link:</p>
+              <div className="bg-gray-600 p-2 rounded-lg flex items-center justify-between">
+                <span className="break-words text-ref">{referralLink}</span>
+                <button
+                  onClick={() => navigator.clipboard.writeText(referralLink)}
+                  className="ml-2 text-blue-400 hover:text-blue-600 transition duration-300"
+                >
+                  <FaLink size={20} />
+                </button>
+              </div>
+            </div>
+          )}
+          {referralCount !== null && (
+            <div className="mt-4">
+              <p className="text-center text-xl">You have {referralCount} referral{referralCount !== 1 && 's'}.</p>
+            </div>
+          )}
+        </div>
       </div>
-      <div className="bg-black p-6 rounded-lg shadow-md w-full max-w-lg mx-auto">
-        <h3 className="text-lg font-bold text-white mb-4">Your Referrals</h3>
+      <div className="bg-gray-800 p-6 rounded-lg shadow-md w-full max-w-3xl mx-auto">
+        <h3 className="text-2xl font-bold text-white mb-4">Your Referrals</h3>
         {referrals.length > 0 ? (
           referrals.map((referral, index) => (
-            <div key={index} className="flex justify-between items-center bg-gray-900 p-4 rounded-lg mb-2">
+            <div key={index} className="flex justify-between items-center bg-gray-700 p-4 rounded-lg mb-2">
               <div className="flex items-center">
                 <img src={referral.photoUrl || 'https://storges.xyz/images/storges.png'} alt="Referral" className="w-10 h-10 rounded-full mr-4" />
                 <div>
