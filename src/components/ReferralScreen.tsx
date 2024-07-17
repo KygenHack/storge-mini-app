@@ -50,14 +50,8 @@ const ReferralScreen: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gray-900 text-white flex flex-col items-center p-4">
+    <div className="relative min-h-screen bg-gradient-to-b from-blue-500 to-indigo-800 text-white flex flex-col items-center p-4">
       <div className="bg-gray-800 text-white rounded-lg shadow-md p-6 w-full max-w-3xl mb-6">
-        <button 
-          onClick={() => window.history.back()} 
-          className="absolute top-4 left-4 bg-gray-700 text-white px-4 py-2 rounded-full shadow-lg hover:bg-gray-600 transition duration-300"
-        >
-          Cancel
-        </button>
         <div className="flex flex-col items-center mb-6">
           <FaUserFriends className="text-6xl mb-4" />
           <h1 className="text-3xl font-bold mb-2 text-center">Invite Friends</h1>
@@ -73,7 +67,7 @@ const ReferralScreen: React.FC = () => {
           </button>
           {referralLink && (
             <div className="w-full">
-              <p className="text-lg text-center mb-2">Your Referral Link:</p>
+              <p className="text-xs text-center mb-2">Your Referral Link:</p>
               <div className="bg-gray-600 p-2 rounded-lg flex items-center justify-between">
                 <span className="break-words text-ref">{referralLink}</span>
                 <button
