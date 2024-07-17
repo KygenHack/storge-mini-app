@@ -55,7 +55,7 @@ const ReferralScreen: React.FC = () => {
         <div className="flex flex-col items-center mb-6">
           <FaUserFriends className="text-6xl mb-4" />
           <h1 className="text-3xl font-bold mb-2 text-center">Invite Friends</h1>
-          <p className="text-gray-400 text-center mb-4">Score 10% from buddies + 2.5% from their referrals. Get a 🎟 play pass for each friend.</p>
+          <p className="text-gray-400 text-xs text-center mb-4">Score 10% from buddies + 2.5% from their referrals. Get a 🎟 play pass for each friend.</p>
           <div className="bg-gray-700 p-4 rounded-lg mb-4 w-full">
             <p className="text-gray-300 text-center">Calculating...</p>
           </div>
@@ -81,7 +81,7 @@ const ReferralScreen: React.FC = () => {
           )}
           {referralCount !== null && (
             <div className="mt-4">
-              <p className="text-center text-xl">You have {referralCount} referral{referralCount !== 1 && 's'}.</p>
+              <p className="text-center text-xs">You have {referralCount} referral{referralCount !== 1 && 's'}.</p>
             </div>
           )}
         </div>
