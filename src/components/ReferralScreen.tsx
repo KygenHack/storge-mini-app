@@ -51,7 +51,7 @@ const ReferralScreen: React.FC = () => {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-blue-500 to-indigo-800 text-white flex flex-col items-center p-4">
-      <div className="bg-gray-800 text-white rounded-lg shadow-md p-6 w-full max-w-3xl mb-6">
+      <div className="bg-white text-black rounded-lg shadow-md p-6 w-full max-w-3xl mb-6">
         <div className="flex flex-col items-center mb-6">
           <FaUserFriends className="text-6xl mb-4" />
           <h1 className="text-3xl font-bold mb-2 text-center">Invite Friends</h1>
@@ -86,8 +86,8 @@ const ReferralScreen: React.FC = () => {
           )}
         </div>
       </div>
-      <div className="bg-gray-800 p-6 rounded-lg shadow-md w-full max-w-3xl mx-auto">
-        <h3 className="text-2xl font-bold text-white mb-4">Your Referrals</h3>
+      <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-3xl mx-auto">
+        <h3 className="text-2xl font-bold text-black mb-4">Your Referrals</h3>
         {referrals.length > 0 ? (
           referrals.map((referral, index) => (
             <div key={index} className="flex justify-between items-center bg-gray-700 p-4 rounded-lg mb-2">
@@ -102,7 +102,7 @@ const ReferralScreen: React.FC = () => {
             </div>
           ))
         ) : (
-          <p className="text-gray-400">No referrals yet</p>
+          <p className="text-black">No referrals yet</p>
         )}
       </div>
     </div>
