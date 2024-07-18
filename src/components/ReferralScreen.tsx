@@ -23,7 +23,7 @@ const ReferralScreen: React.FC = () => {
           let link = profile.referralLink;
           if (!link) {
             // Generate a new referral link if it doesn't exist
-            link = `https://t.me/TRC_Miner_Bot?start=${userId}`;
+            link = `https://t.me/TRC_Miner_Bot/portal?startapp=${userId}`;
             await saveUserProfile(userId, { referralLink: link });
           }
           setReferralLink(link);
@@ -37,7 +37,8 @@ const ReferralScreen: React.FC = () => {
   const generateReferralLink = async () => {
     if (user) {
       const userId = user.id;
-      const link = `https://t.me/TRC_Miner_Bot?start=${userId}`;
+      
+      const link = `https://t.me/TRC_Miner_Bot/portal?startapp=${userId}`;
       setReferralLink(link);
       try {
         await saveUserProfile(userId, { referralLink: link });
@@ -56,20 +57,11 @@ const ReferralScreen: React.FC = () => {
           <FaUserFriends className="text-6xl mb-4" />
           <h1 className="text-3xl font-bold mb-2 text-center">Invite Friends</h1>
           <p className="text-black text-xs text-center mb-4">Score 10% from buddies + 2.5% from their referrals. Get a storges for each friend.</p>
-          <div className="bg-gray-700 p-4 rounded-lg mb-4 w-full">
-            <p className="text-gray-300 text-center">Calculating...</p>
-          </div>
-          <button 
-            onClick={generateReferralLink} 
-            className="bg-blue-600 text-white px-6 py-2 rounded-full shadow-lg hover:bg-blue-700 transition duration-300 mb-4"
-          >
-            Generate Link
-          </button>
           {referralLink && (
             <div className="w-full">
               <p className="text-xs text-center mb-2">Your Referral Link:</p>
               <div className="bg-gray-600 p-2 rounded-lg flex items-center justify-between">
-                <span className="break-words text-ref">{referralLink}</span>
+                <span className="break-words text-white text-ref">{referralLink}</span>
                 <button
                   onClick={() => navigator.clipboard.writeText(referralLink)}
                   className="ml-2 text-blue-400 hover:text-blue-600 transition duration-300"
@@ -79,6 +71,13 @@ const ReferralScreen: React.FC = () => {
               </div>
             </div>
           )}
+          <button 
+            onClick={generateReferralLink} 
+            className="bg-blue-600 mt-4 text-white px-6 py-2 rounded-full shadow-lg hover:bg-blue-700 transition duration-300 mb-4"
+          >
+            Generate Link
+          </button>
+          
           {referralCount !== null && (
             <div className="mt-4">
               <p className="text-center text-xs">You have {referralCount} referral{referralCount !== 1 && 's'}.</p>

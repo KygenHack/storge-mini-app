@@ -10,6 +10,7 @@ import ReferralScreen from './components/ReferralScreen';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { getUserProfile, saveUserProfile, updateUserBalance } from './firebaseUtils';
 import { auth } from './firebase';
+import { initializeGameState, saveInitData, addReferral, updateGameState, fetchGameState, saveGameProgress, getLeaderboard } from './gameLogic';
 
 const App: React.FC<{ balance: number; setBalance: React.Dispatch<React.SetStateAction<number>>; referralCount: number; setReferralCount: React.Dispatch<React.SetStateAction<number>> }> = ({ balance, setBalance, referralCount, setReferralCount }) => {
   const telegramInitData = useInitData();
@@ -81,6 +82,7 @@ const App: React.FC<{ balance: number; setBalance: React.Dispatch<React.SetState
   return null;
 };
 
+
 const Root: React.FC = () => {
   const [balance, setBalance] = useState<number>(0); // Shared state for balance
   const [referralCount, setReferralCount] = useState<number>(0); // Shared state for referral count
@@ -101,10 +103,7 @@ const Root: React.FC = () => {
         <Routes>
           <Route path="/" element={<App balance={balance} setBalance={setBalance} referralCount={referralCount} setReferralCount={setReferralCount} />} />
           <Route path="/home" element={<HomeScreen onStart={() => {}} balance={balance} setBalance={setBalance} referralCount={referralCount} />} />
-          <Route 
-            path="/tasks" 
-            element={<TaskScreen onTaskComplete={handleTaskComplete} referralCount={referralCount} />} // Pass the referralCount prop
-          />
+          <Route path="/tasks" element={<TaskScreen onTaskComplete={handleTaskComplete} referralCount={referralCount} score={balance} />} />
           <Route path="/frens" element={<ReferralScreen />} />
         </Routes>
         <Navbar />

@@ -3,7 +3,7 @@ import { useInitData } from '@telegram-apps/sdk-react';
 import { useSpring, animated } from '@react-spring/web';
 import TaskScreen from './TaskScreen';
 import Modal from 'react-modal';
-import { getUserProfile, updateUserBalance, getLeaderboard, saveGameProgress } from '../firebaseUtils';
+import { getUserProfile, saveUserProfile, updateUserBalance, getLeaderboard, saveGameProgress, getTotalPlayers, incrementTotalPlayers, getUserReferralCount } from '../firebaseUtils';
 import useLocalStorage from 'use-local-storage';
 
 Modal.setAppElement('#root');
@@ -12,7 +12,7 @@ interface HomeScreenProps {
   onStart: () => void;
   balance: number;
   setBalance: React.Dispatch<React.SetStateAction<number>>;
-  referralCount: number; // Added referralCount prop
+  referralCount: number;
 }
 
 interface Click {
@@ -42,7 +42,7 @@ const INITIAL_SCORE = 0;
 const INITIAL_ENERGY = 5000;
 const INITIAL_MAX_ENERGY = 6500;
 const INITIAL_INCOME_RATE = 50;
-const COOLDOWN_PERIOD = 50 * 60;
+const COOLDOWN_PERIOD = 7 * 3600;
 const BOOST_COST_MULTIPLIER = 100;
 
 const LEVELS = [
@@ -123,6 +123,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
   const [showTasks, setShowTasks] = useState<boolean>(false);
   const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [totalPlayers, setTotalPlayers] = useState<number>(0);
+  const [userReferralCount, setUserReferralCount] = useState<number>(0);
 
   const [multiplierLevel, setMultiplierLevel] = useLocalStorage<number>('multiplierLevel', 1);
   const [miningRobotLevel, setMiningRobotLevel] = useLocalStorage<number>('miningRobotLevel', 1);
@@ -328,9 +330,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
   }, [randomItems]);
 
   const formatTime = useCallback((seconds: number) => {
-    const mins = Math.floor(seconds / 60);
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    return `${hours}:${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
   }, []);
 
   const buyBoost = useCallback(
@@ -416,6 +419,31 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
   const levelIndex = LEVELS.findIndex(l => l === level);
 
   useEffect(() => {
+    const initializeUser = async () => {
+      if (user) {
+        const profile = await getUserProfile(user.id);
+        if (!profile) {
+          const newUserProfile = {
+            id: user.id,
+            username: user.username,
+            balance: 0,
+            referralCount: 0,
+            referralLink: `https://t.me/your_bot?start=${user.id}`
+          };
+          await saveUserProfile(user.id, newUserProfile);
+          await incrementTotalPlayers();
+        }
+        const userReferralCount = await getUserReferralCount(user.id);
+        setUserReferralCount(userReferralCount);
+        const totalPlayers = await getTotalPlayers();
+        setTotalPlayers(totalPlayers);
+      }
+    };
+
+    initializeUser();
+  }, [user]);
+
+  useEffect(() => {
     const fetchLeaderboard = async () => {
       const data = await getLeaderboard();
       setLeaderboard(data);
@@ -423,10 +451,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
 
     fetchLeaderboard();
   }, []);
-
+  
   if (showTasks) {
-    return <TaskScreen onTaskComplete={handleTaskComplete} referralCount={referralCount} />;
+    return <TaskScreen onTaskComplete={handleTaskComplete} referralCount={referralCount} score={score} />;
   }
+
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-blue-500 to-indigo-800 text-white flex flex-col items-center p-4">
@@ -444,9 +473,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
                 <div className="text-xs flex items-center text-black">
                   <small className="ml-1 text-gray-500">ID: {user.id}</small>
                 </div>
-              
-                <div className="text-xs flex items-center text-black">
+                {/* <div className="text-xs flex items-center text-black">
                   <small className="ml-1 text-gray-500">Language: {user.languageCode}</small>
+                </div> */}
+                {/* <div className="text-xs flex items-center text-black">
+                  <small className="ml-1 text-gray-500">Players: {totalPlayers}</small>
+                </div> */}
+                <div className="text-xs flex items-center text-black">
+                  <small className="ml-1 text-gray-500">Referrals: {userReferralCount}</small>
                 </div>
               </div>
             </div>
@@ -564,7 +598,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
                 {cooldown === null ? 'Claim Rewards' : `Next claim in ${formatTime(remainingTime!)}`}
               </button>
               <div className="flex justify-between w-full mt-2">
-              <div className="w-full max-w-md p-4 mb-4 flex justify-between items-center">
+              <div className="w-full max-w-md p-4 mb-2 flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <div>
                 <p className="text-xs text-gray-500">{fact}</p>
