@@ -23,7 +23,7 @@ const ReferralScreen: React.FC = () => {
           let link = profile.referralLink;
           if (!link) {
             // Generate a new referral link if it doesn't exist
-            link = `https://t.me/TRC_Miner_Bot/portal?startapp=${userId}`;
+            link = `https://t.me/Storges_Bot/tapstorges?startapp=${userId}`;
             await saveUserProfile(userId, { referralLink: link });
           }
           setReferralLink(link);
@@ -38,7 +38,7 @@ const ReferralScreen: React.FC = () => {
     if (user) {
       const userId = user.id;
       
-      const link = `https://t.me/TRC_Miner_Bot/portal?startapp=${userId}`;
+      const link = `https://t.me/Storges_Bot/tapstorges?startapp=${userId}`;
       setReferralLink(link);
       try {
         await saveUserProfile(userId, { referralLink: link });

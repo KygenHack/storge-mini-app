@@ -41,9 +41,9 @@ interface InitData {
 const INITIAL_SCORE = 0;
 const INITIAL_ENERGY = 5000;
 const INITIAL_MAX_ENERGY = 6500;
-const INITIAL_INCOME_RATE = 50;
+const INITIAL_INCOME_RATE = 5;
 const COOLDOWN_PERIOD = 7 * 3600;
-const BOOST_COST_MULTIPLIER = 100;
+const BOOST_COST_MULTIPLIER = 10000;
 
 const LEVELS = [
   { name: 'Hustler', minBalance: 0, maxBalance: 999 },
@@ -428,10 +428,28 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
             username: user.username,
             balance: 0,
             referralCount: 0,
-            referralLink: `https://t.me/your_bot?start=${user.id}`
+            referralLink: `https://t.me/Storges_Bot/tapstorges?startapp=${user.id}`
           };
           await saveUserProfile(user.id, newUserProfile);
           await incrementTotalPlayers();
+          // Save user profile to local storage
+          localStorage.setItem('userProfile', JSON.stringify(newUserProfile));
+        } else {
+          // Load user profile from local storage if it exists
+          const storedProfile = localStorage.getItem('userProfile');
+          if (storedProfile) {
+            const parsedProfile = JSON.parse(storedProfile);
+            if (parsedProfile.id === user.id) {
+              setUserReferralCount(parsedProfile.referralCount);
+              setBalance(parsedProfile.balance);
+            } else {
+              setUserReferralCount(profile.referralCount);
+              setBalance(profile.balance);
+            }
+          } else {
+            setUserReferralCount(profile.referralCount);
+            setBalance(profile.balance);
+          }
         }
         const userReferralCount = await getUserReferralCount(user.id);
         setUserReferralCount(userReferralCount);
@@ -441,7 +459,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
     };
 
     initializeUser();
-  }, [user]);
+  }, [user, setBalance]);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -455,7 +473,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
   if (showTasks) {
     return <TaskScreen onTaskComplete={handleTaskComplete} referralCount={referralCount} score={score} />;
   }
-
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-blue-500 to-indigo-800 text-white flex flex-col items-center p-4">
@@ -473,12 +490,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
                 <div className="text-xs flex items-center text-black">
                   <small className="ml-1 text-gray-500">ID: {user.id}</small>
                 </div>
-                {/* <div className="text-xs flex items-center text-black">
-                  <small className="ml-1 text-gray-500">Language: {user.languageCode}</small>
-                </div> */}
-                {/* <div className="text-xs flex items-center text-black">
-                  <small className="ml-1 text-gray-500">Players: {totalPlayers}</small>
-                </div> */}
                 <div className="text-xs flex items-center text-black">
                   <small className="ml-1 text-gray-500">Referrals: {userReferralCount}</small>
                 </div>
@@ -499,7 +510,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
                 <div className="bg-blue-100 rounded-lg p-4 shadow-md">
                   <p className="text-lg font-bold text-gray-800">Multiplier</p>
                   <p className="text-sm text-gray-600">Level {multiplierLevel}</p>
-                  <p className="text-sm text-gray-600">Cost: ${multiplierLevel * BOOST_COST_MULTIPLIER}</p>
+                  <p className="text-sm text-gray-600">Cost: {multiplierLevel * BOOST_COST_MULTIPLIER}</p>
                   <button
                     onClick={() => buyBoost('multiplier')}
                     className={`w-full px-2 py-1 mt-2 rounded-lg transition duration-300 ${multiplierLevel >= 10 ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
@@ -512,7 +523,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
                 <div className="bg-blue-100 rounded-lg p-4 shadow-md">
                   <p className="text-lg font-bold text-gray-800">Miner</p>
                   <p className="text-sm text-gray-600">Level {miningRobotLevel}</p>
-                  <p className="text-sm text-gray-600">Cost: ${miningRobotLevel * BOOST_COST_MULTIPLIER}</p>
+                  <p className="text-sm text-gray-600">Cost: {miningRobotLevel * BOOST_COST_MULTIPLIER}</p>
                   <button
                     onClick={() => buyBoost('miningRobot')}
                     className={`w-full px-2 py-1 mt-2 rounded-lg transition duration-300 ${miningRobotLevel >= 10 ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
@@ -525,7 +536,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
                 <div className="bg-blue-100 rounded-lg p-4 shadow-md">
                   <p className="text-lg font-bold text-gray-800">Tap Boost</p>
                   <p className="text-sm text-gray-600">Level {tapBoostLevel}</p>
-                  <p className="text-sm text-gray-600">Cost: ${tapBoostLevel * BOOST_COST_MULTIPLIER}</p>
+                  <p className="text-sm text-gray-600">Cost: {tapBoostLevel * BOOST_COST_MULTIPLIER}</p>
                   <button
                     onClick={() => buyBoost('tapBoost')}
                     className={`w-full px-2 py-1 mt-2 rounded-lg transition duration-300 ${tapBoostLevel >= 10 ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
@@ -538,7 +549,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
                 <div className="bg-blue-100 rounded-lg p-4 shadow-md">
                   <p className="text-lg font-bold text-gray-800">Maximizer</p>
                   <p className="text-sm text-gray-600">Level {maximizerLevel}</p>
-                  <p className="text-sm text-gray-600">Cost: ${maximizerLevel * BOOST_COST_MULTIPLIER}</p>
+                  <p className="text-sm text-gray-600">Cost: {maximizerLevel * BOOST_COST_MULTIPLIER}</p>
                   <button
                     onClick={() => buyBoost('maximizer')}
                     className={`w-full px-2 py-1 mt-2 rounded-lg transition duration-300 ${maximizerLevel >= 10 ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
@@ -551,7 +562,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
                 <div className="bg-blue-100 rounded-lg p-4 shadow-md">
                   <p className="text-lg font-bold text-gray-800">Charger</p>
                   <p className="text-sm text-gray-600">Level {chargerLevel}</p>
-                  <p className="text-sm text-gray-600">Cost: ${chargerLevel * BOOST_COST_MULTIPLIER}</p>
+                  <p className="text-sm text-gray-600">Cost: {chargerLevel * BOOST_COST_MULTIPLIER}</p>
                   <button
                     onClick={() => buyBoost('charger')}
                     className={`w-full px-2 py-1 mt-2 rounded-lg transition duration-300 ${chargerLevel >= 10 ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
@@ -566,7 +577,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
           )}
           <div className="w-full max-w-md bg-white rounded-lg p-4 mb-4 shadow-lg text-center">
             <div className="flex flex-col items-center">
-            <p className="text-xs text-gray-500 mt-1">Coin Balance</p>
+              <p className="text-xs text-gray-500 mt-1">Coin Balance</p>
               <animated.h1 className="text-3xl font-bold text-gray-800">
                 {animatedScore.number.to((n) => `${n.toFixed(0)}`)}
               </animated.h1>
@@ -598,13 +609,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onStart, balance, setBalance, r
                 {cooldown === null ? 'Claim Rewards' : `Next claim in ${formatTime(remainingTime!)}`}
               </button>
               <div className="flex justify-between w-full mt-2">
-              <div className="w-full max-w-md p-4 mb-2 flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div>
-                <p className="text-xs text-gray-500">{fact}</p>
-              </div>
-            </div>
-          </div>
+                <div className="w-full max-w-md p-4 mb-2 flex justify-between items-center">
+                  <div className="flex items-center space-x-4">
+                    <div>
+                      <p className="text-xs text-gray-500 text-center">{fact}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
